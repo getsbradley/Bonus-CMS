@@ -1,2 +1,0 @@
-# Bonus-CMS
-Bonus CMS
