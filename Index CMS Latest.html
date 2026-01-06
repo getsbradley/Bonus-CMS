@@ -1,0 +1,1952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BonusDrivingSchool - Modern CMS</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <!-- SheetJS for Excel import -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary: #dc2626;
+            --primary-dark: #b91c1c;
+            --secondary: #1e40af;
+            --accent: #f59e0b;
+            --light: #f8fafc;
+            --dark: #1e293b;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        
+        .nav-item {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--accent);
+        }
+        
+        .floating-btn {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .floating-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .table-row-hover:hover {
+            background: #f8fafc;
+            transform: scale(1.01);
+            transition: all 0.2s ease;
+        }
+
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #dc2626;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .drop-zone.active {
+            border-color: #dc2626;
+            background-color: #fef2f2;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+    <!-- Firebase Configuration -->
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-8qCiQbDjgIJz8cJHjbo5dajOm70QKpU",
+            authDomain: "bonus-cms.firebaseapp.com",
+            projectId: "bonus-cms",
+            storageBucket: "bonus-cms.firebasestorage.app",
+            messagingSenderId: "217665267949",
+            appId: "1:217665267949:web:6279faf663b954c60104e4",
+            measurementId: "G-1LTR20E5RN"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+    </script>
+
+    <!-- Authentication Views -->
+    <div id="auth-views" class="min-h-screen gradient-bg flex items-center justify-center p-4">
+        <!-- Login View -->
+        <div id="login-view" class="glass-effect p-8 rounded-2xl shadow-2xl w-full max-w-md">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-car text-2xl text-red-600"></i>
+                </div>
+                <h2 class="text-3xl font-bold text-white">BonusDrivingSchool</h2>
+                <p class="text-white opacity-80 mt-2">Admin Portal</p>
+            </div>
+            <form id="login-form">
+                <div class="mb-6">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-envelope text-gray-400"></i>
+                        </div>
+                        <input id="login-email" type="email" class="pl-10 w-full py-3 px-4 rounded-lg bg-white bg-opacity-90 border border-white border-opacity-20 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 text-gray-800 placeholder-gray-500" placeholder="Email address" required>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-lock text-gray-400"></i>
+                        </div>
+                        <input id="login-password" type="password" class="pl-10 w-full py-3 px-4 rounded-lg bg-white bg-opacity-90 border border-white border-opacity-20 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 text-gray-800 placeholder-gray-500" placeholder="Password" required>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between">
+                    <button type="submit" id="login-button" class="w-full bg-white text-red-600 font-bold py-3 px-4 rounded-lg hover:bg-opacity-90 transition duration-300 flex items-center justify-center">
+                        <i class="fas fa-sign-in-alt mr-2"></i> Sign In
+                    </button>
+                </div>
+            </form>
+            <p class="text-center text-white text-sm mt-6">
+                Don't have an account? 
+                <a href="#" id="show-register" class="font-bold underline opacity-90 hover:opacity-100">Register here</a>
+            </p>
+            <div id="login-error" class="mt-4 text-red-200 text-center hidden bg-red-500 bg-opacity-20 py-2 rounded-lg"></div>
+        </div>
+
+        <!-- Registration View -->
+        <div id="register-view" class="glass-effect p-8 rounded-2xl shadow-2xl w-full max-w-md hidden">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-user-plus text-2xl text-red-600"></i>
+                </div>
+                <h2 class="text-3xl font-bold text-white">Create Account</h2>
+                <p class="text-white opacity-80 mt-2">Join BonusDrivingSchool</p>
+            </div>
+            <form id="register-form">
+                <div class="mb-6">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-envelope text-gray-400"></i>
+                        </div>
+                        <input id="register-email" type="email" class="pl-10 w-full py-3 px-4 rounded-lg bg-white bg-opacity-90 border border-white border-opacity-20 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 text-gray-800 placeholder-gray-500" placeholder="Email address" required>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-lock text-gray-400"></i>
+                        </div>
+                        <input id="register-password" type="password" class="pl-10 w-full py-3 px-4 rounded-lg bg-white bg-opacity-90 border border-white border-opacity-20 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 text-gray-800 placeholder-gray-500" placeholder="Password" required>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between">
+                    <button type="submit" id="register-button" class="w-full bg-white text-red-600 font-bold py-3 px-4 rounded-lg hover:bg-opacity-90 transition duration-300 flex items-center justify-center">
+                        <i class="fas fa-user-plus mr-2"></i> Register
+                    </button>
+                </div>
+            </form>
+            <p class="text-center text-white text-sm mt-6">
+                Already have an account? 
+                <a href="#" id="show-login" class="font-bold underline opacity-90 hover:opacity-100">Sign in here</a>
+            </p>
+            <div id="register-error" class="mt-4 text-red-200 text-center hidden bg-red-500 bg-opacity-20 py-2 rounded-lg"></div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="main-app" class="hidden">
+        <!-- Top Navigation Bar -->
+        <header class="bg-white shadow-lg sticky top-0 z-50">
+            <div class="flex items-center justify-between px-6 py-4">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center mr-3">
+                        <i class="fas fa-car text-white"></i>
+                    </div>
+                    <h1 class="text-xl font-bold text-gray-800">BonusDrivingSchool</h1>
+                </div>
+                
+                <div class="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
+                    <a href="#" class="nav-item py-2 px-4 rounded-md text-gray-700 hover:bg-white hover:text-red-600 transition duration-300 active" data-tab="dashboard">
+                        <i class="fas fa-chart-pie mr-2"></i>Dashboard
+                    </a>
+                    <a href="#" class="nav-item py-2 px-4 rounded-md text-gray-700 hover:bg-white hover:text-red-600 transition duration-300" data-tab="clients">
+                        <i class="fas fa-users mr-2"></i>Clients
+                    </a>
+                    <a href="#" class="nav-item py-2 px-4 rounded-md text-gray-700 hover:bg-white hover:text-red-600 transition duration-300" data-tab="payments">
+                        <i class="fas fa-money-bill-wave mr-2"></i>Payments
+                    </a>
+                    <a href="#" class="nav-item py-2 px-4 rounded-md text-gray-700 hover:bg-white hover:text-red-600 transition duration-300" data-tab="whatsapp">
+                        <i class="fab fa-whatsapp mr-2"></i>WhatsApp
+                    </a>
+                    <a href="#" class="nav-item py-2 px-4 rounded-md text-gray-700 hover:bg-white hover:text-red-600 transition duration-300" data-tab="import">
+                        <i class="fas fa-file-import mr-2"></i>Import
+                    </a>
+                </div>
+                
+                <div class="flex items-center">
+                    <div class="mr-4 text-right">
+                        <p class="text-sm font-medium text-gray-700" id="user-display-name">Admin User</p>
+                        <p class="text-xs text-gray-500" id="user-email">bonusdrivingschool.com</p>
+                    </div>
+                    <button id="logout-button" class="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition duration-300 flex items-center">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="container mx-auto px-6 py-8">
+            <!-- Dashboard Tab -->
+            <div id="dashboard-tab" class="tab-content">
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800">Dashboard Overview</h2>
+                    <div class="text-sm text-gray-500">
+                        <i class="fas fa-calendar-alt mr-2"></i>
+                        <span id="current-date"></span>
+                    </div>
+                </div>
+                
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="stat-card p-6 card-hover">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-white opacity-80">Total Clients</p>
+                                <p id="total-clients" class="text-3xl font-bold mt-2">0</p>
+                            </div>
+                            <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                                <i class="fas fa-users text-white text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <div class="flex items-center text-white opacity-80 text-sm">
+                                <i class="fas fa-arrow-up mr-1"></i>
+                                <span>5% increase</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card p-6 card-hover" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-white opacity-80">Active Clients</p>
+                                <p id="active-clients" class="text-3xl font-bold mt-2">0</p>
+                            </div>
+                            <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user-check text-white text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <div class="flex items-center text-white opacity-80 text-sm">
+                                <i class="fas fa-arrow-up mr-1"></i>
+                                <span>12% increase</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card p-6 card-hover" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-white opacity-80">Total Revenue</p>
+                                <p id="total-revenue" class="text-3xl font-bold mt-2">R 0</p>
+                            </div>
+                            <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                                <i class="fas fa-chart-line text-white text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <div class="flex items-center text-white opacity-80 text-sm">
+                                <i class="fas fa-arrow-up mr-1"></i>
+                                <span>8% increase</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card p-6 card-hover" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-white opacity-80">Pending Payments</p>
+                                <p id="pending-payments" class="text-3xl font-bold mt-2">R 0</p>
+                            </div>
+                            <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                                <i class="fas fa-clock text-white text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <div class="flex items-center text-white opacity-80 text-sm">
+                                <i class="fas fa-exclamation-circle mr-1"></i>
+                                <span>Requires attention</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Activity -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-white rounded-2xl shadow-lg p-6 card-hover">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xl font-bold text-gray-800">Recent Clients</h3>
+                            <a href="#" class="view-all-clients text-red-600 hover:text-red-700 text-sm font-medium flex items-center">
+                                View all <i class="fas fa-arrow-right ml-1"></i>
+                            </a>
+                        </div>
+                        <div id="recent-clients" class="space-y-4">
+                            <!-- Recent clients will be populated here -->
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-2xl shadow-lg p-6 card-hover">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xl font-bold text-gray-800">Recent Payments</h3>
+                            <a href="#" class="view-all-payments text-red-600 hover:text-red-700 text-sm font-medium flex items-center">
+                                View all <i class="fas fa-arrow-right ml-1"></i>
+                            </a>
+                        </div>
+                        <div id="recent-payments" class="space-y-4">
+                            <!-- Recent payments will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Client Management Tab -->
+            <div id="clients-tab" class="tab-content hidden">
+                <!-- Client management content remains the same -->
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800">Client Management</h2>
+                    <button id="add-client-btn" class="bg-red-600 text-white py-3 px-6 rounded-lg hover:bg-red-700 transition duration-300 flex items-center floating-btn">
+                        <i class="fas fa-plus mr-2"></i> Add New Client
+                    </button>
+                </div>
+                
+                <!-- Client Form -->
+                <div id="client-form-container" class="bg-white rounded-2xl shadow-lg p-6 mb-8 card-hover">
+                    <h3 class="text-xl font-semibold mb-6 text-gray-800 border-b pb-3" id="client-form-title">
+                        <i class="fas fa-user-plus mr-2 text-red-600"></i> Add New Client
+                    </h3>
+                    <form id="client-form">
+                        <input type="hidden" id="client-id">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-gray-700 text-sm font-bold mb-2" for="client-name">
+                                    <i class="fas fa-user mr-1 text-gray-500"></i> Name *
+                                </label>
+                                <input id="client-name" type="text" class="w-full py-3 px-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition duration-300" required>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 text-sm font-bold mb-2" for="client-surname">
+                                    <i class="fas fa-user mr-1 text-gray-500"></i> Surname *
+                                </label>
+                                <input id="client-surname" type="text" class="w-full py-3 px-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition duration-300" required>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 text-sm font-bold mb-2" for="client-email">
+                                    <i class="fas fa-envelope mr-1 text-gray-500"></i> Email Address
+                                </label>
+                                <input id="client-email" type="email" class="w-full py-3 px-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition duration-300">
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 text-sm font-bold mb-2" for="client-phone">
+                                    <i class="fas fa-phone mr-1 text-gray-500"></i> Phone Number *
+                                </label>
+                                <input id="client-phone" type="tel" class="w-full py-3 px-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition duration-300" required>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 text-sm font-bold mb-2" for="client-id-number">
+                                    <i class="fas fa-id-card mr-1 text-gray-500"></i> ID Number
+                                </label>
+                                <input id="client-id-number" type="text" class="w-full py-3 px-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition duration-300">
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 text-sm font-bold mb-2" for="client-status">
+                                    <i class="fas fa-tag mr-1 text-gray-500"></i> Status
+                                </label>
+                                <select id="client-status" class="w-full py-3 px-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition duration-300">
+                                    <option value="Active">Active</option>
+                                    <option value="Inactive">Inactive</option>
+                                    <option value="Completed">Completed</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mt-6 flex justify-end space-x-3">
+                            <button type="button" id="cancel-client" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
+                                Cancel
+                            </button>
+                            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 flex items-center">
+                                <i class="fas fa-save mr-2"></i> Save Client
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Client Search -->
+                <div class="bg-white rounded-2xl shadow-lg p-6 mb-8 card-hover">
+                    <h3 class="text-xl font-semibold mb-6 text-gray-800">
+                        <i class="fas fa-search mr-2 text-red-600"></i> Search Clients
+                    </h3>
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <div class="relative flex-grow">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-search text-gray-400"></i>
+                            </div>
+                            <input id="client-search" type="text" placeholder="Search by name, email, phone, or ID..." class="pl-10 w-full py-3 px-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition duration-300">
+                        </div>
+                        <button id="search-clients" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 flex items-center justify-center">
+                            <i class="fas fa-search mr-2"></i> Search
+                        </button>
+                        <button id="clear-search" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300 flex items-center justify-center">
+                            <i class="fas fa-times mr-2"></i> Clear
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Client List -->
+                <div class="bg-white rounded-2xl shadow-lg p-6 card-hover">
+                    <h3 class="text-xl font-semibold mb-6 text-gray-800">
+                        <i class="fas fa-list mr-2 text-red-600"></i> Client List
+                    </h3>
+                    <div id="client-list" class="overflow-x-auto">
+                        <!-- Client list will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Management Tab -->
+            <div id="payments-tab" class="tab-content hidden">
+                <!-- Payment management content remains the same -->
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800">Payment Management</h2>
+                    <button id="add-payment-btn" class="bg-red-600 text-white py-3 px-6 rounded-lg hover:bg-red-700 transition duration-300 flex items-center floating-btn">
+                        <i class="fas fa-plus mr-2"></i> Add New Payment
+                    </button>
+                </div>
+                
+                <!-- Payment Form -->
+                <div id="payment-form-container" class="bg-white rounded-2xl shadow-lg p-6 mb-8 card-hover">
+                    <h3 class="text-xl font-semibold mb-6 text-gray-800 border-b pb-3" id="payment-form-title">
+                        <i class="fas fa-money-bill-wave mr-2 text-red-600"></i> Add New Payment
+                    </h3>
+                    <form id="payment-form">
+                        <input type="hidden" id="payment-id">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-gray-700 text-sm font-bold mb-2" for="payment-client">
+                                    <i class="fas fa-user mr-1 text-gray-500"></i> Client *
+                                </label>
+                                <select id="payment-client" class="w-full py-3 px-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition duration-300" required>
+                                    <option value="">Select a client</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 text-sm font-bold mb-2" for="payment-date">
+                                    <i class="fas fa-calendar mr-1 text-gray-500"></i> Payment Date *
+                                </label>
+                                <input id="payment-date" type="date" class="w-full py-3 px-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition duration-300" required>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 text-sm font-bold mb-2" for="payment-amount">
+                                    <i class="fas fa-money-bill mr-1 text-gray-500"></i> Amount Paid *
+                                </label>
+                                <input id="payment-amount" type="number" step="0.01" class="w-full py-3 px-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition duration-300" required>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-gray-700 text-sm font-bold mb-2" for="payment-reason">
+                                    <i class="fas fa-comment-dollar mr-1 text-gray-500"></i> Reason for Payment *
+                                </label>
+                                <input id="payment-reason" type="text" class="w-full py-3 px-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition duration-300" placeholder="e.g., Driving Lesson, Registration Fee, Test Booking, etc." required>
+                                <p class="text-xs text-gray-500 mt-1">Enter the purpose or reason for this payment</p>
+                            </div>
+                        </div>
+                        <div class="mt-6 flex justify-end space-x-3">
+                            <button type="button" id="cancel-payment" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
+                                Cancel
+                            </button>
+                            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 flex items-center">
+                                <i class="fas fa-save mr-2"></i> Save Payment
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Financial Summary -->
+                <div class="bg-white rounded-2xl shadow-lg p-6 mb-8 card-hover">
+                    <h3 class="text-xl font-semibold mb-6 text-gray-800">
+                        <i class="fas fa-chart-bar mr-2 text-red-600"></i> Financial Summary
+                    </h3>
+                    <div id="financial-summary" class="overflow-x-auto">
+                        <!-- Financial summary will be populated here -->
+                    </div>
+                </div>
+
+                <!-- All Payments List -->
+                <div class="bg-white rounded-2xl shadow-lg p-6 card-hover">
+                    <h3 class="text-xl font-semibold mb-6 text-gray-800">
+                        <i class="fas fa-receipt mr-2 text-red-600"></i> All Payments
+                    </h3>
+                    <div id="payment-list" class="overflow-x-auto">
+                        <!-- Payment list will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- WhatsApp Integration Tab -->
+            <div id="whatsapp-tab" class="tab-content hidden">
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800">WhatsApp Messaging</h2>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Configuration -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Setup</h3>
+                        
+                        <div class="mb-4">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">Your WhatsApp Number</label>
+                            <input id="whatsapp-number" type="tel" class="w-full py-2 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="27XXXXXXXXX">
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">Default Message</label>
+                            <textarea id="whatsapp-message" class="w-full py-2 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500" rows="3">Hello from Bonus Driving School!</textarea>
+                        </div>
+                        
+                        <button id="save-whatsapp" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg w-full">
+                            Save Configuration
+                        </button>
+                    </div>
+
+                    <!-- Quick Message -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800">Quick Message</h3>
+                        
+                        <div class="mb-4">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">Select Client</label>
+                            <select id="whatsapp-client" class="w-full py-2 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <option value="">Choose client</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">Message Preview</label>
+                            <div id="message-preview" class="bg-gray-50 p-3 rounded-lg min-h-[100px] text-gray-600">
+                                Select a client to preview message
+                            </div>
+                        </div>
+                        
+                        <button id="send-whatsapp" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg w-full" disabled>
+                            Open WhatsApp
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Client List -->
+                <div class="bg-white rounded-2xl shadow-lg p-6 mt-8">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Client Contacts</h3>
+                    <div id="whatsapp-clients" class="overflow-x-auto">
+                        <!-- Client list will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Excel Import Tab -->
+            <div id="import-tab" class="tab-content hidden">
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800">Excel Import Utility</h2>
+                    <div class="text-sm text-gray-500 bg-yellow-100 py-2 px-4 rounded-lg">
+                        <i class="fas fa-info-circle mr-2 text-yellow-600"></i>
+                        Supports .xlsx and .xls files
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-white rounded-2xl shadow-lg p-6 card-hover">
+                        <h3 class="text-xl font-semibold mb-6 text-gray-800">
+                            <i class="fas fa-file-import mr-2 text-red-600"></i> Import Data
+                        </h3>
+                        <div class="mb-6">
+                            <label class="block text-gray-700 text-sm font-bold mb-2" for="import-type">
+                                <i class="fas fa-filter mr-1 text-gray-500"></i> Import Type
+                            </label>
+                            <select id="import-type" class="w-full py-3 px-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition duration-300">
+                                <option value="clients">Client Records</option>
+                                <option value="payments">Payment Records</option>
+                            </select>
+                        </div>
+                        <div class="mb-6">
+                            <label class="block text-gray-700 text-sm font-bold mb-2" for="excel-file">
+                                <i class="fas fa-file-excel mr-1 text-gray-500"></i> Excel File (.xlsx, .xls)
+                            </label>
+                            <div id="drop-zone" class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center transition duration-300 hover:border-red-400">
+                                <i class="fas fa-file-excel text-4xl text-green-500 mb-3"></i>
+                                <p class="text-gray-600 mb-2">Drag & drop your Excel file here</p>
+                                <p class="text-gray-500 text-sm mb-4">or</p>
+                                <input id="excel-file" type="file" accept=".xlsx, .xls" class="hidden">
+                                <label for="excel-file" class="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition duration-300 cursor-pointer inline-block">
+                                    <i class="fas fa-upload mr-2"></i> Browse Files
+                                </label>
+                                <p id="file-name" class="text-gray-500 text-sm mt-3"></p>
+                            </div>
+                        </div>
+                        <div class="flex justify-end">
+                            <button id="import-data" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 flex items-center">
+                                <i class="fas fa-file-import mr-2"></i> Import Data
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-lg p-6 card-hover">
+                        <h3 class="text-xl font-semibold mb-6 text-gray-800">
+                            <i class="fas fa-clipboard-list mr-2 text-red-600"></i> Import Results
+                        </h3>
+                        <div id="import-results" class="overflow-x-auto">
+                            <div class="text-center text-gray-500 py-12">
+                                <i class="fas fa-inbox text-4xl mb-3 opacity-50"></i>
+                                <p>Import results will appear here</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Client Detail Modal -->
+    <div id="client-detail-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800">Client Details</h3>
+                    <button id="close-client-modal" class="text-gray-500 hover:text-gray-700 text-2xl">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div id="client-detail-content">
+                    <!-- Client details will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Application state
+        let currentUser = null;
+        let clients = [];
+        let payments = [];
+        let editingClientId = null;
+        let editingPaymentId = null;
+        let currentFile = null;
+        let whatsappConfig = {
+            number: '',
+            message: 'Hello from Bonus Driving School!'
+        };
+
+        // DOM Elements
+        const authViews = document.getElementById('auth-views');
+        const mainApp = document.getElementById('main-app');
+        const loginView = document.getElementById('login-view');
+        const registerView = document.getElementById('register-view');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const showRegister = document.getElementById('show-register');
+        const showLogin = document.getElementById('show-login');
+        const loginError = document.getElementById('login-error');
+        const registerError = document.getElementById('register-error');
+        const logoutButton = document.getElementById('logout-button');
+        const loginButton = document.getElementById('login-button');
+        const registerButton = document.getElementById('register-button');
+        const navItems = document.querySelectorAll('.nav-item');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        // Debug function
+        function debug(message) {
+            console.log(`[DEBUG] ${message}`);
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            debug('DOM loaded, initializing application...');
+            
+            // Set current date
+            const currentDateElement = document.getElementById('current-date');
+            if (currentDateElement) {
+                currentDateElement.textContent = new Date().toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            }
+            
+            // Check Firebase initialization
+            debug('Firebase auth object:', auth ? 'Available' : 'Not available');
+            debug('Firebase db object:', db ? 'Available' : 'Not available');
+            
+            // Authentication state observer
+            auth.onAuthStateChanged(function(user) {
+                debug('Auth state changed, user:', user ? user.email : 'No user');
+                if (user) {
+                    currentUser = user;
+                    debug('User authenticated:', user.email);
+                    
+                    // Update UI with user info
+                    document.getElementById('user-display-name').textContent = user.email.split('@')[0];
+                    document.getElementById('user-email').textContent = user.email;
+                    
+                    authViews.classList.add('hidden');
+                    mainApp.classList.remove('hidden');
+                    loadData();
+                    loadWhatsAppConfig();
+                    
+                    // Set payment date now that main app is visible
+                    setPaymentDate();
+                } else {
+                    currentUser = null;
+                    debug('No user authenticated');
+                    authViews.classList.remove('hidden');
+                    mainApp.classList.add('hidden');
+                    showLoginView();
+                }
+            });
+
+            // Event listeners for authentication
+            loginForm.addEventListener('submit', handleLogin);
+            registerForm.addEventListener('submit', handleRegister);
+            showRegister.addEventListener('click', showRegisterView);
+            showLogin.addEventListener('click', showLoginView);
+            logoutButton.addEventListener('click', handleLogout);
+
+            // Event listeners for navigation
+            navItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const tab = this.getAttribute('data-tab');
+                    showTab(tab);
+                });
+            });
+
+            // Initialize with dashboard tab
+            showTab('dashboard');
+            
+            // Client form handling
+            const clientForm = document.getElementById('client-form');
+            if (clientForm) {
+                clientForm.addEventListener('submit', handleClientSubmit);
+            }
+            
+            const cancelClientBtn = document.getElementById('cancel-client');
+            if (cancelClientBtn) {
+                cancelClientBtn.addEventListener('click', resetClientForm);
+            }
+            
+            const addClientBtn = document.getElementById('add-client-btn');
+            if (addClientBtn) {
+                addClientBtn.addEventListener('click', function() {
+                    resetClientForm();
+                    showTab('clients');
+                });
+            }
+
+            // Payment form handling
+            const paymentForm = document.getElementById('payment-form');
+            if (paymentForm) {
+                paymentForm.addEventListener('submit', handlePaymentSubmit);
+            }
+            
+            const cancelPaymentBtn = document.getElementById('cancel-payment');
+            if (cancelPaymentBtn) {
+                cancelPaymentBtn.addEventListener('click', resetPaymentForm);
+            }
+            
+            const addPaymentBtn = document.getElementById('add-payment-btn');
+            if (addPaymentBtn) {
+                addPaymentBtn.addEventListener('click', function() {
+                    resetPaymentForm();
+                    showTab('payments');
+                });
+            }
+
+            // View all buttons
+            const viewAllClients = document.querySelector('.view-all-clients');
+            if (viewAllClients) {
+                viewAllClients.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showTab('clients');
+                });
+            }
+
+            const viewAllPayments = document.querySelector('.view-all-payments');
+            if (viewAllPayments) {
+                viewAllPayments.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showTab('payments');
+                });
+            }
+
+            // Search functionality
+            const searchClientsBtn = document.getElementById('search-clients');
+            if (searchClientsBtn) {
+                searchClientsBtn.addEventListener('click', handleClientSearch);
+            }
+
+            const clearSearchBtn = document.getElementById('clear-search');
+            if (clearSearchBtn) {
+                clearSearchBtn.addEventListener('click', function() {
+                    document.getElementById('client-search').value = '';
+                    updateClientList();
+                });
+            }
+
+            // Excel import functionality
+            setupExcelImport();
+
+            // WhatsApp functionality
+            setupWhatsAppIntegration();
+            
+            debug('Application initialization complete');
+        });
+
+        // WhatsApp Integration Functions
+        function setupWhatsAppIntegration() {
+            // Save configuration
+            const saveConfigBtn = document.getElementById('save-whatsapp');
+            if (saveConfigBtn) {
+                saveConfigBtn.addEventListener('click', saveWhatsAppConfig);
+            }
+
+            // Client selection for chat
+            const whatsappClientSelect = document.getElementById('whatsapp-client');
+            if (whatsappClientSelect) {
+                whatsappClientSelect.addEventListener('change', handleClientSelection);
+            }
+
+            // Send message
+            const sendWhatsAppBtn = document.getElementById('send-whatsapp');
+            if (sendWhatsAppBtn) {
+                sendWhatsAppBtn.addEventListener('click', sendWhatsAppMessage);
+            }
+        }
+
+        function loadWhatsAppConfig() {
+            const saved = localStorage.getItem('whatsappConfig');
+            if (saved) {
+                whatsappConfig = JSON.parse(saved);
+                document.getElementById('whatsapp-number').value = whatsappConfig.number;
+                document.getElementById('whatsapp-message').value = whatsappConfig.message;
+            }
+        }
+
+        function saveWhatsAppConfig() {
+            const number = document.getElementById('whatsapp-number').value;
+            const message = document.getElementById('whatsapp-message').value;
+
+            whatsappConfig = {
+                number: number,
+                message: message
+            };
+
+            localStorage.setItem('whatsappConfig', JSON.stringify(whatsappConfig));
+            alert('Configuration saved!');
+            debug('WhatsApp configuration saved');
+        }
+
+        function populateWhatsAppClients() {
+            const select = document.getElementById('whatsapp-client');
+            select.innerHTML = '<option value="">Choose client</option>';
+            
+            clients.forEach(client => {
+                if (client.phone) {
+                    const option = document.createElement('option');
+                    option.value = client.id;
+                    option.textContent = `${client.name} ${client.surname} - ${client.phone}`;
+                    select.appendChild(option);
+                }
+            });
+        }
+
+        function handleClientSelection() {
+            const clientId = this.value;
+            const sendBtn = document.getElementById('send-whatsapp');
+            const preview = document.getElementById('message-preview');
+            
+            if (clientId) {
+                const client = clients.find(c => c.id === clientId);
+                const message = whatsappConfig.message.replace(/{name}/g, client.name);
+                preview.textContent = message;
+                sendBtn.disabled = false;
+            } else {
+                preview.textContent = 'Select a client to preview message';
+                sendBtn.disabled = true;
+            }
+        }
+
+        function sendWhatsAppMessage() {
+            const clientId = document.getElementById('whatsapp-client').value;
+            const client = clients.find(c => c.id === clientId);
+            
+            if (!client || !client.phone || !whatsappConfig.number) {
+                alert('Please configure WhatsApp and select a client with phone number');
+                return;
+            }
+            
+            const message = encodeURIComponent(whatsappConfig.message.replace(/{name}/g, client.name));
+            const phone = client.phone.replace(/\D/g, '');
+            const whatsappUrl = `https://wa.me/${phone}?text=${message}`;
+            
+            window.open(whatsappUrl, '_blank');
+            debug(`WhatsApp message sent to ${client.name}`);
+        }
+
+        function updateWhatsAppClientList() {
+            const container = document.getElementById('whatsapp-clients');
+            
+            if (clients.length === 0) {
+                container.innerHTML = '<p class="text-center py-4">No clients found</p>';
+                return;
+            }
+            
+            let html = '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">';
+            
+            clients.forEach(client => {
+                if (client.phone) {
+                    html += `
+                        <div class="border rounded-lg p-4">
+                            <div class="font-semibold">${client.name} ${client.surname}</div>
+                            <div class="text-sm text-gray-600">${client.phone}</div>
+                            <button onclick="messageClient('${client.id}')" class="bg-green-500 hover:bg-green-600 text-white py-1 px-3 rounded text-sm mt-2 w-full">
+                                Message
+                            </button>
+                        </div>
+                    `;
+                }
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function messageClient(clientId) {
+            const client = clients.find(c => c.id === clientId);
+            if (!client || !client.phone || !whatsappConfig.number) {
+                alert('Please configure WhatsApp number first');
+                return;
+            }
+            
+            const message = encodeURIComponent(whatsappConfig.message.replace(/{name}/g, client.name));
+            const phone = client.phone.replace(/\D/g, '');
+            const whatsappUrl = `https://wa.me/${phone}?text=${message}`;
+            
+            window.open(whatsappUrl, '_blank');
+            debug(`Direct WhatsApp message to ${client.name}`);
+        }
+
+        // Navigation functions
+        function showTab(tabName) {
+            debug(`Switching to tab: ${tabName}`);
+            
+            // Hide all tab contents
+            tabContents.forEach(tab => {
+                tab.classList.add('hidden');
+            });
+
+            // Remove active class from all nav items
+            navItems.forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // Show selected tab content
+            document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+
+            // Add active class to selected nav item
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+            // Load specific data if needed
+            if (tabName === 'payments') {
+                loadClientsForPaymentForm();
+                setPaymentDate();
+            } else if (tabName === 'whatsapp') {
+                populateWhatsAppClients();
+                updateWhatsAppClientList();
+            }
+        }
+
+        // Data management functions
+        function loadData() {
+            debug('Loading application data');
+            loadClients();
+            loadPayments();
+        }
+
+        function loadClients() {
+            debug('Loading clients from Firestore');
+            db.collection('clients').orderBy('registrationDate', 'desc')
+                .onSnapshot(snapshot => {
+                    clients = [];
+                    snapshot.forEach(doc => {
+                        clients.push({
+                            id: doc.id,
+                            ...doc.data()
+                        });
+                    });
+                    debug(`Loaded ${clients.length} clients`);
+                    updateClientList();
+                    updateDashboard();
+                    populateWhatsAppClients();
+                    updateWhatsAppClientList();
+                }, error => {
+                    debug(`Error loading clients: ${error.message}`);
+                });
+        }
+
+        function loadPayments() {
+            debug('Loading payments from Firestore');
+            db.collection('payments').orderBy('date', 'desc')
+                .onSnapshot(snapshot => {
+                    payments = [];
+                    snapshot.forEach(doc => {
+                        payments.push({
+                            id: doc.id,
+                            ...doc.data()
+                        });
+                    });
+                    debug(`Loaded ${payments.length} payments`);
+                    updatePaymentList();
+                    updateFinancialSummary();
+                    updateDashboard();
+                }, error => {
+                    debug(`Error loading payments: ${error.message}`);
+                });
+        }
+
+        function loadClientsForPaymentForm() {
+            const paymentClientSelect = document.getElementById('payment-client');
+            if (!paymentClientSelect) {
+                debug('Payment client select not found');
+                return;
+            }
+            
+            paymentClientSelect.innerHTML = '<option value="">Select a client</option>';
+            
+            clients.forEach(client => {
+                const option = document.createElement('option');
+                option.value = client.id;
+                option.textContent = `${client.name} ${client.surname}`;
+                paymentClientSelect.appendChild(option);
+            });
+            debug(`Loaded ${clients.length} clients for payment form`);
+        }
+
+        // Client form handling
+        function handleClientSubmit(e) {
+            e.preventDefault();
+            debug('Client form submitted');
+            
+            const clientData = {
+                name: document.getElementById('client-name').value,
+                surname: document.getElementById('client-surname').value,
+                email: document.getElementById('client-email').value,
+                phone: document.getElementById('client-phone').value,
+                idNumber: document.getElementById('client-id-number').value,
+                status: document.getElementById('client-status').value,
+                registrationDate: new Date()
+            };
+
+            if (editingClientId) {
+                // Update existing client
+                db.collection('clients').doc(editingClientId).update(clientData)
+                    .then(() => {
+                        debug('Client updated successfully');
+                        resetClientForm();
+                    })
+                    .catch(error => {
+                        debug(`Error updating client: ${error.message}`);
+                        console.error('Error updating client: ', error);
+                    });
+            } else {
+                // Add new client
+                db.collection('clients').add(clientData)
+                    .then(() => {
+                        debug('Client added successfully');
+                        resetClientForm();
+                    })
+                    .catch(error => {
+                        debug(`Error adding client: ${error.message}`);
+                        console.error('Error adding client: ', error);
+                    });
+            }
+        }
+
+        function resetClientForm() {
+            const clientForm = document.getElementById('client-form');
+            if (clientForm) {
+                clientForm.reset();
+                document.getElementById('client-id').value = '';
+                document.getElementById('client-form-title').textContent = 'Add New Client';
+                editingClientId = null;
+                debug('Client form reset');
+            }
+        }
+
+        // Payment form handling
+        function handlePaymentSubmit(e) {
+            e.preventDefault();
+            debug('Payment form submitted');
+            
+            const paymentData = {
+                clientId: document.getElementById('payment-client').value,
+                date: new Date(document.getElementById('payment-date').value),
+                amount: parseFloat(document.getElementById('payment-amount').value),
+                reason: document.getElementById('payment-reason').value
+            };
+
+            if (editingPaymentId) {
+                // Update existing payment
+                db.collection('payments').doc(editingPaymentId).update(paymentData)
+                    .then(() => {
+                        debug('Payment updated successfully');
+                        resetPaymentForm();
+                    })
+                    .catch(error => {
+                        debug(`Error updating payment: ${error.message}`);
+                        console.error('Error updating payment: ', error);
+                    });
+            } else {
+                // Add new payment
+                db.collection('payments').add(paymentData)
+                    .then(() => {
+                        debug('Payment added successfully');
+                        resetPaymentForm();
+                    })
+                    .catch(error => {
+                        debug(`Error adding payment: ${error.message}`);
+                        console.error('Error adding payment: ', error);
+                    });
+            }
+        }
+
+        function resetPaymentForm() {
+            const paymentForm = document.getElementById('payment-form');
+            if (paymentForm) {
+                paymentForm.reset();
+                document.getElementById('payment-id').value = '';
+                document.getElementById('payment-form-title').textContent = 'Add New Payment';
+                setPaymentDate(); // Reset to current date
+                editingPaymentId = null;
+                debug('Payment form reset');
+            }
+        }
+
+        // Payment date function
+        function setPaymentDate() {
+            const paymentDateInput = document.getElementById('payment-date');
+            if (paymentDateInput) {
+                const today = new Date();
+                const formattedDate = today.toISOString().split('T')[0];
+                paymentDateInput.value = formattedDate;
+                debug('Payment date set to current date');
+            } else {
+                debug('Payment date input not found');
+            }
+        }
+
+        // Client search functionality
+        function handleClientSearch() {
+            const searchTerm = document.getElementById('client-search').value.toLowerCase();
+            if (!searchTerm) {
+                updateClientList();
+                return;
+            }
+
+            const filteredClients = clients.filter(client => 
+                client.name.toLowerCase().includes(searchTerm) ||
+                client.surname.toLowerCase().includes(searchTerm) ||
+                (client.email && client.email.toLowerCase().includes(searchTerm)) ||
+                (client.phone && client.phone.includes(searchTerm)) ||
+                (client.idNumber && client.idNumber.includes(searchTerm))
+            );
+
+            updateClientList(filteredClients);
+        }
+
+        // Update functions
+        function updateClientList(clientsToShow = clients) {
+            const clientList = document.getElementById('client-list');
+            if (!clientList) return;
+            
+            if (clientsToShow.length === 0) {
+                clientList.innerHTML = '<p class="text-center py-4">No clients found</p>';
+                return;
+            }
+
+            let html = `
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+            `;
+
+            clientsToShow.forEach(client => {
+                html += `
+                    <tr class="hover:bg-gray-50 table-row-hover">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10 bg-red-100 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-user text-red-600"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">${client.name} ${client.surname}</div>
+                                    <div class="text-sm text-gray-500">${client.idNumber || 'No ID'}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${client.email || 'No email'}</div>
+                            <div class="text-sm text-gray-500">${client.phone}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                client.status === 'Active' ? 'bg-green-100 text-green-800' :
+                                client.status === 'Completed' ? 'bg-blue-100 text-blue-800' :
+                                'bg-gray-100 text-gray-800'
+                            }">
+                                ${client.status}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button class="text-red-600 hover:text-red-900 mr-3 edit-client" data-id="${client.id}">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="text-red-600 hover:text-red-900 delete-client" data-id="${client.id}">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `</tbody></table>`;
+
+            clientList.innerHTML = html;
+
+            // Add event listeners to edit and delete buttons
+            document.querySelectorAll('.edit-client').forEach(button => {
+                button.addEventListener('click', function() {
+                    const clientId = this.getAttribute('data-id');
+                    editClient(clientId);
+                });
+            });
+
+            document.querySelectorAll('.delete-client').forEach(button => {
+                button.addEventListener('click', function() {
+                    const clientId = this.getAttribute('data-id');
+                    deleteClient(clientId);
+                });
+            });
+        }
+
+        function updatePaymentList() {
+            const paymentList = document.getElementById('payment-list');
+            if (!paymentList) return;
+            
+            if (payments.length === 0) {
+                paymentList.innerHTML = '<p class="text-center py-4">No payments found</p>';
+                return;
+            }
+
+            let html = `
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+            `;
+
+            payments.forEach(payment => {
+                const client = clients.find(c => c.id === payment.clientId);
+                const clientName = client ? `${client.name} ${client.surname}` : 'Unknown Client';
+                const paymentDate = payment.date ? 
+                    new Date(payment.date.seconds * 1000).toLocaleDateString() : 'N/A';
+                
+                html += `
+                    <tr class="hover:bg-gray-50 table-row-hover">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            ${clientName}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            ${paymentDate}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            R ${parseFloat(payment.amount).toFixed(2)}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            ${payment.reason || 'N/A'}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button class="text-red-600 hover:text-red-900 mr-3 edit-payment" data-id="${payment.id}">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="text-red-600 hover:text-red-900 delete-payment" data-id="${payment.id}">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `</tbody></table>`;
+
+            paymentList.innerHTML = html;
+
+            // Add event listeners to edit and delete buttons
+            document.querySelectorAll('.edit-payment').forEach(button => {
+                button.addEventListener('click', function() {
+                    const paymentId = this.getAttribute('data-id');
+                    editPayment(paymentId);
+                });
+            });
+
+            document.querySelectorAll('.delete-payment').forEach(button => {
+                button.addEventListener('click', function() {
+                    const paymentId = this.getAttribute('data-id');
+                    deletePayment(paymentId);
+                });
+            });
+        }
+
+        function updateFinancialSummary() {
+            const financialSummary = document.getElementById('financial-summary');
+            if (!financialSummary) return;
+            
+            const totalRevenue = payments.reduce((sum, payment) => sum + parseFloat(payment.amount || 0), 0);
+            const monthlyRevenue = payments
+                .filter(payment => {
+                    if (!payment.date) return false;
+                    const paymentDate = new Date(payment.date.seconds * 1000);
+                    const now = new Date();
+                    return paymentDate.getMonth() === now.getMonth() && 
+                           paymentDate.getFullYear() === now.getFullYear();
+                })
+                .reduce((sum, payment) => sum + parseFloat(payment.amount || 0), 0);
+
+            financialSummary.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <p class="text-sm text-green-800">Total Revenue</p>
+                        <p class="text-2xl font-bold text-green-900">R ${totalRevenue.toFixed(2)}</p>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <p class="text-sm text-blue-800">Monthly Revenue</p>
+                        <p class="text-2xl font-bold text-blue-900">R ${monthlyRevenue.toFixed(2)}</p>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded-lg">
+                        <p class="text-sm text-purple-800">Total Payments</p>
+                        <p class="text-2xl font-bold text-purple-900">${payments.length}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateDashboard() {
+            const totalClientsEl = document.getElementById('total-clients');
+            const activeClientsEl = document.getElementById('active-clients');
+            const totalRevenueEl = document.getElementById('total-revenue');
+            const pendingPaymentsEl = document.getElementById('pending-payments');
+            const recentClientsEl = document.getElementById('recent-clients');
+            const recentPaymentsEl = document.getElementById('recent-payments');
+
+            if (totalClientsEl) totalClientsEl.textContent = clients.length;
+            
+            if (activeClientsEl) {
+                const activeClients = clients.filter(client => client.status === 'Active').length;
+                activeClientsEl.textContent = activeClients;
+            }
+
+            if (totalRevenueEl) {
+                const totalRevenue = payments.reduce((sum, payment) => sum + parseFloat(payment.amount || 0), 0);
+                totalRevenueEl.textContent = `R ${totalRevenue.toFixed(2)}`;
+            }
+            
+            if (pendingPaymentsEl) pendingPaymentsEl.textContent = 'R 0.00';
+
+            // Update recent clients and payments displays
+            if (recentClientsEl) {
+                recentClientsEl.innerHTML = clients.slice(0, 3).map(client => `
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                            <p class="font-medium">${client.name} ${client.surname}</p>
+                            <p class="text-sm text-gray-500">${client.phone || 'No phone'}</p>
+                        </div>
+                        <span class="px-2 py-1 text-xs rounded-full ${client.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                            ${client.status}
+                        </span>
+                    </div>
+                `).join('');
+            }
+
+            if (recentPaymentsEl) {
+                recentPaymentsEl.innerHTML = payments.slice(0, 3).map(payment => {
+                    const client = clients.find(c => c.id === payment.clientId);
+                    const clientName = client ? `${client.name} ${client.surname}` : 'Unknown Client';
+                    return `
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div>
+                                <p class="font-medium">${clientName}</p>
+                                <p class="text-sm text-gray-500">${payment.reason || 'No reason'} • R ${parseFloat(payment.amount).toFixed(2)}</p>
+                            </div>
+                            <span class="text-sm text-gray-500">
+                                ${payment.date ? new Date(payment.date.seconds * 1000).toLocaleDateString() : 'N/A'}
+                            </span>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        // Edit and Delete functions
+        function editClient(clientId) {
+            const client = clients.find(c => c.id === clientId);
+            if (!client) return;
+
+            document.getElementById('client-id').value = client.id;
+            document.getElementById('client-name').value = client.name || '';
+            document.getElementById('client-surname').value = client.surname || '';
+            document.getElementById('client-email').value = client.email || '';
+            document.getElementById('client-phone').value = client.phone || '';
+            document.getElementById('client-id-number').value = client.idNumber || '';
+            document.getElementById('client-status').value = client.status || 'Active';
+            
+            document.getElementById('client-form-title').textContent = 'Edit Client';
+            editingClientId = clientId;
+            
+            showTab('clients');
+            document.getElementById('client-form-container').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function deleteClient(clientId) {
+            if (confirm('Are you sure you want to delete this client?')) {
+                db.collection('clients').doc(clientId).delete()
+                    .then(() => {
+                        debug('Client deleted successfully');
+                    })
+                    .catch(error => {
+                        debug(`Error deleting client: ${error.message}`);
+                        console.error('Error deleting client: ', error);
+                    });
+            }
+        }
+
+        function editPayment(paymentId) {
+            const payment = payments.find(p => p.id === paymentId);
+            if (!payment) return;
+
+            document.getElementById('payment-id').value = payment.id;
+            document.getElementById('payment-client').value = payment.clientId;
+            
+            if (payment.date) {
+                const paymentDate = new Date(payment.date.seconds * 1000);
+                document.getElementById('payment-date').value = paymentDate.toISOString().split('T')[0];
+            }
+            
+            document.getElementById('payment-amount').value = payment.amount || '';
+            document.getElementById('payment-reason').value = payment.reason || '';
+            
+            document.getElementById('payment-form-title').textContent = 'Edit Payment';
+            editingPaymentId = paymentId;
+            
+            showTab('payments');
+            document.getElementById('payment-form-container').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function deletePayment(paymentId) {
+            if (confirm('Are you sure you want to delete this payment?')) {
+                db.collection('payments').doc(paymentId).delete()
+                    .then(() => {
+                        debug('Payment deleted successfully');
+                    })
+                    .catch(error => {
+                        debug(`Error deleting payment: ${error.message}`);
+                        console.error('Error deleting payment: ', error);
+                    });
+            }
+        }
+
+        // Authentication functions
+        function handleLogin(e) {
+            e.preventDefault();
+            debug('Login form submitted');
+            
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            debug(`Attempting login with email: ${email}`);
+            
+            // Show loading state
+            loginButton.innerHTML = '<div class="loading-spinner"></div> Signing In...';
+            loginButton.disabled = true;
+
+            auth.signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    debug('Login successful');
+                    // Reset button state
+                    loginButton.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i> Sign In';
+                    loginButton.disabled = false;
+                })
+                .catch((error) => {
+                    debug(`Login error: ${error.code} - ${error.message}`);
+                    // Reset button state
+                    loginButton.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i> Sign In';
+                    loginButton.disabled = false;
+                    
+                    let errorMessage = "Login failed. ";
+                    switch(error.code) {
+                        case 'auth/invalid-email':
+                            errorMessage += "Invalid email address.";
+                            break;
+                        case 'auth/user-disabled':
+                            errorMessage += "This account has been disabled.";
+                            break;
+                        case 'auth/user-not-found':
+                            errorMessage += "No account found with this email.";
+                            break;
+                        case 'auth/wrong-password':
+                            errorMessage += "Incorrect password.";
+                            break;
+                        default:
+                            errorMessage += error.message;
+                    }
+                    
+                    loginError.textContent = errorMessage;
+                    loginError.classList.remove('hidden');
+                });
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            debug('Register form submitted');
+            
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+
+            debug(`Attempting registration with email: ${email}`);
+            
+            // Show loading state
+            registerButton.innerHTML = '<div class="loading-spinner"></div> Creating Account...';
+            registerButton.disabled = true;
+
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    debug('Registration successful');
+                    // Reset button state
+                    registerButton.innerHTML = '<i class="fas fa-user-plus mr-2"></i> Register';
+                    registerButton.disabled = false;
+                })
+                .catch((error) => {
+                    debug(`Registration error: ${error.code} - ${error.message}`);
+                    // Reset button state
+                    registerButton.innerHTML = '<i class="fas fa-user-plus mr-2"></i> Register';
+                    registerButton.disabled = false;
+                    
+                    let errorMessage = "Registration failed. ";
+                    switch(error.code) {
+                        case 'auth/email-already-in-use':
+                            errorMessage += "Email already in use.";
+                            break;
+                        case 'auth/invalid-email':
+                            errorMessage += "Invalid email address.";
+                            break;
+                        case 'auth/operation-not-allowed':
+                            errorMessage += "Operation not allowed.";
+                            break;
+                        case 'auth/weak-password':
+                            errorMessage += "Password is too weak.";
+                            break;
+                        default:
+                            errorMessage += error.message;
+                    }
+                    
+                    registerError.textContent = errorMessage;
+                    registerError.classList.remove('hidden');
+                });
+        }
+
+        function showLoginView() {
+            loginView.classList.remove('hidden');
+            registerView.classList.add('hidden');
+            loginError.classList.add('hidden');
+            debug('Showing login view');
+        }
+
+        function showRegisterView() {
+            loginView.classList.add('hidden');
+            registerView.classList.remove('hidden');
+            registerError.classList.add('hidden');
+            debug('Showing register view');
+        }
+
+        function handleLogout() {
+            debug('Logging out user');
+            auth.signOut()
+                .then(() => {
+                    debug('Logout successful');
+                })
+                .catch((error) => {
+                    debug(`Logout error: ${error.message}`);
+                });
+        }
+
+        // Excel Import functionality
+        function setupExcelImport() {
+            const fileInput = document.getElementById('excel-file');
+            const dropZone = document.getElementById('drop-zone');
+            const fileName = document.getElementById('file-name');
+            const importButton = document.getElementById('import-data');
+            const importResults = document.getElementById('import-results');
+
+            // File input change
+            fileInput.addEventListener('change', function(e) {
+                if (this.files.length > 0) {
+                    currentFile = this.files[0];
+                    fileName.textContent = `Selected: ${currentFile.name}`;
+                    debug(`File selected: ${currentFile.name}`);
+                }
+            });
+
+            // Drag and drop functionality
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, unhighlight, false);
+            });
+
+            function highlight() {
+                dropZone.classList.add('active');
+            }
+
+            function unhighlight() {
+                dropZone.classList.remove('active');
+            }
+
+            dropZone.addEventListener('drop', handleDrop, false);
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                if (files.length > 0) {
+                    currentFile = files[0];
+                    fileInput.files = files;
+                    fileName.textContent = `Selected: ${currentFile.name}`;
+                    debug(`File dropped: ${currentFile.name}`);
+                }
+            }
+
+            // Import button click
+            importButton.addEventListener('click', handleImport);
+        }
+
+        function handleImport() {
+            if (!currentFile) {
+                alert('Please select an Excel file first.');
+                return;
+            }
+
+            const importType = document.getElementById('import-type').value;
+            const importResults = document.getElementById('import-results');
+            const importButton = document.getElementById('import-data');
+
+            // Show loading state
+            importButton.innerHTML = '<div class="loading-spinner"></div> Importing...';
+            importButton.disabled = true;
+
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    // Get first worksheet
+                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                    
+                    debug(`Imported ${jsonData.length} records from Excel`);
+                    
+                    if (importType === 'clients') {
+                        importClients(jsonData, importResults, importButton);
+                    } else if (importType === 'payments') {
+                        importPayments(jsonData, importResults, importButton);
+                    }
+                } catch (error) {
+                    debug(`Error processing Excel file: ${error.message}`);
+                    importResults.innerHTML = `
+                        <div class="bg-red-50 p-4 rounded-lg">
+                            <h4 class="font-bold text-red-800">Import Failed</h4>
+                            <p class="text-red-700">Error processing Excel file: ${error.message}</p>
+                        </div>
+                    `;
+                    importButton.innerHTML = '<i class="fas fa-file-import mr-2"></i> Import Data';
+                    importButton.disabled = false;
+                }
+            };
+            
+            reader.onerror = function() {
+                debug('Error reading file');
+                importResults.innerHTML = `
+                    <div class="bg-red-50 p-4 rounded-lg">
+                        <h4 class="font-bold text-red-800">Import Failed</h4>
+                        <p class="text-red-700">Error reading the file. Please try again.</p>
+                    </div>
+                `;
+                importButton.innerHTML = '<i class="fas fa-file-import mr-2"></i> Import Data';
+                importButton.disabled = false;
+            };
+            
+            reader.readAsArrayBuffer(currentFile);
+        }
+
+        function importClients(data, resultsElement, importButton) {
+            let successCount = 0;
+            let errorCount = 0;
+            let processed = 0;
+            
+            resultsElement.innerHTML = `
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h4 class="font-bold text-blue-800">Importing Clients...</h4>
+                    <p class="text-blue-700">Processing ${data.length} records...</p>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                        <div class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+            `;
+            
+            const progressBar = resultsElement.querySelector('.bg-blue-600');
+            
+            data.forEach((row, index) => {
+                // Map Excel columns to client fields
+                const clientData = {
+                    name: row['Name'] || row['name'] || '',
+                    surname: row['Surname'] || row['surname'] || '',
+                    email: row['Email'] || row['email'] || '',
+                    phone: row['Phone'] || row['phone'] || row['Phone Number'] || '',
+                    idNumber: row['ID Number'] || row['idNumber'] || row['ID'] || '',
+                    status: row['Status'] || row['status'] || 'Active',
+                    registrationDate: new Date()
+                };
+                
+                // Validate required fields
+                if (!clientData.name || !clientData.surname || !clientData.phone) {
+                    errorCount++;
+                    processed++;
+                    updateProgress();
+                    return;
+                }
+                
+                db.collection('clients').add(clientData)
+                    .then(() => {
+                        successCount++;
+                        processed++;
+                        updateProgress();
+                    })
+                    .catch(error => {
+                        errorCount++;
+                        processed++;
+                        updateProgress();
+                        debug(`Error importing client: ${error.message}`);
+                    });
+            });
+            
+            function updateProgress() {
+                const progress = (processed / data.length) * 100;
+                progressBar.style.width = `${progress}%`;
+                
+                if (processed === data.length) {
+                    resultsElement.innerHTML = `
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <h4 class="font-bold text-green-800">Import Complete</h4>
+                            <p class="text-green-700">Successfully imported ${successCount} clients</p>
+                            ${errorCount > 0 ? `<p class="text-yellow-700">${errorCount} records failed to import</p>` : ''}
+                        </div>
+                    `;
+                    importButton.innerHTML = '<i class="fas fa-file-import mr-2"></i> Import Data';
+                    importButton.disabled = false;
+                    currentFile = null;
+                    document.getElementById('file-name').textContent = '';
+                    document.getElementById('excel-file').value = '';
+                }
+            }
+        }
+
+        function importPayments(data, resultsElement, importButton) {
+            let successCount = 0;
+            let errorCount = 0;
+            let processed = 0;
+            
+            resultsElement.innerHTML = `
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h4 class="font-bold text-blue-800">Importing Payments...</h4>
+                    <p class="text-blue-700">Processing ${data.length} records...</p>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                        <div class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+            `;
+            
+            const progressBar = resultsElement.querySelector('.bg-blue-600');
+            
+            // First, we need to find client IDs based on names
+            data.forEach((row, index) => {
+                const clientName = row['Client Name'] || row['clientName'] || row['Client'] || '';
+                const clientSurname = row['Client Surname'] || row['clientSurname'] || '';
+                const fullName = `${clientName} ${clientSurname}`.trim();
+                
+                // Find client by name
+                const client = clients.find(c => 
+                    `${c.name} ${c.surname}`.toLowerCase() === fullName.toLowerCase() ||
+                    c.name.toLowerCase() === clientName.toLowerCase()
+                );
+                
+                if (!client) {
+                    errorCount++;
+                    processed++;
+                    updateProgress();
+                    return;
+                }
+                
+                const paymentData = {
+                    clientId: client.id,
+                    date: new Date(row['Date'] || row['date'] || new Date()),
+                    amount: parseFloat(row['Amount'] || row['amount'] || 0),
+                    reason: row['Reason'] || row['reason'] || row['Description'] || 'Imported payment'
+                };
+                
+                // Validate required fields
+                if (!paymentData.amount || isNaN(paymentData.amount)) {
+                    errorCount++;
+                    processed++;
+                    updateProgress();
+                    return;
+                }
+                
+                db.collection('payments').add(paymentData)
+                    .then(() => {
+                        successCount++;
+                        processed++;
+                        updateProgress();
+                    })
+                    .catch(error => {
+                        errorCount++;
+                        processed++;
+                        updateProgress();
+                        debug(`Error importing payment: ${error.message}`);
+                    });
+            });
+            
+            function updateProgress() {
+                const progress = (processed / data.length) * 100;
+                progressBar.style.width = `${progress}%`;
+                
+                if (processed === data.length) {
+                    resultsElement.innerHTML = `
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <h4 class="font-bold text-green-800">Import Complete</h4>
+                            <p class="text-green-700">Successfully imported ${successCount} payments</p>
+                            ${errorCount > 0 ? `<p class="text-yellow-700">${errorCount} records failed to import</p>` : ''}
+                        </div>
+                    `;
+                    importButton.innerHTML = '<i class="fas fa-file-import mr-2"></i> Import Data';
+                    importButton.disabled = false;
+                    currentFile = null;
+                    document.getElementById('file-name').textContent = '';
+                    document.getElementById('excel-file').value = '';
+                }
+            }
+        }
+    </script>
+</body>
+</html>
